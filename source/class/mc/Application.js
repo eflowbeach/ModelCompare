@@ -188,13 +188,15 @@ qx.Class.define("mc.Application",
       context.on("focus", function(i)
       {
         var format = d3.time.format.utc("%HZ %a %b %d");
-        if (me.field.getSelection()[0].getLabel() == "PoP") {
+        var fieldName = me.field.getSelection()[0].getLabel();
+        if (fieldName == "PoP") {
           var units = "%";
-        } else if (me.field.getSelection()[0].getLabel() == "SnowAmt") {
+        } else if (fieldName == "SnowAmt" || fieldName == "QPF") {
           units = "\"";
-        }else if (me.field.getSelection()[0].getLabel() == "WindGust") {
-                   units = "KT";
-                 }
+        } else if (fieldName == "WindGust") {
+          units = "KT";
+        }
+
 
         d3.selectAll(".value")[0].forEach(function(d)
         {
@@ -209,13 +211,18 @@ qx.Class.define("mc.Application",
             rows = rows.map(function(d) {
               return [new Date(d.Date * 1000), d.Value];
             });
-            if (me.field.getSelection()[0].getLabel() == "PoP") {
+            var fieldName = me.field.getSelection()[0].getLabel();
+            if (fieldName == "PoP") {
               var maxVal = 100;
-            } else if (me.field.getSelection()[0].getLabel() == "SnowAmt") {
+            } else if (fieldName == "SnowAmt") {
               maxVal = 3;
-            } else if (me.field.getSelection()[0].getLabel() == "WindGust") {
-                            maxVal = 20;
-                          }
+            } else if (fieldName == "WindGust") {
+              maxVal = 40;
+            } else if (fieldName == "QPF") {
+              maxVal = 1;
+            }
+
+
 
             var date = new Date(), values = [0, maxVal];  // <-- make a default range
             rows.forEach(function(d) {
