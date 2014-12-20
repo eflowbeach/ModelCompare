@@ -187,7 +187,7 @@ var fieldName = me.field.getSelection()[0].getLabel();
       d3.select("body").append("div").attr("class", "rule").call(context.rule());
       d3.select("body").selectAll(".horizon").data(me.models.toArray().map(stock)).enter().insert("div", ".bottom").attr("class", "horizon").call(context.horizon().colors(colors).format(d3.format("+,.2r")));
 
-      //      d3.select("body").selectAll(".horizon").call(horizon.colors(['rgb(241,238,246)','rgb(189,201,225)','rgb(116,169,207)','rgb(5,112,176)','rgb(241,238,246)','rgb(189,201,225)','rgb(116,169,207)','rgb(5,112,176)'])).call(horizon.scale([0,100]));
+
       context.on("focus", function(i)
       {
         var format = d3.time.format.utc("%HZ %a %b %d");
