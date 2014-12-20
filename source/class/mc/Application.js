@@ -80,55 +80,44 @@ qx.Class.define("mc.Application",
       var sites = new qx.data.Array();
       me.fields = new qx.data.Array();
       me.models = new qx.data.Array();
-        me.ready = new qx.data.Array();
- d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/models.csv", function(text)
-                            {
-                           // text = text.substring(0, text.length - 1);
-                            var sortedModels = d3.csv.parseRows(text)[0].sort();
-                   me.models.append(sortedModels);
-                   me.ready.append([true]);
-                  })
-
-       d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/sites.csv", function(text)
-                {
-                //text = text.substring(0, text.length - 1);
-                var sortedSites = d3.csv.parseRows(text)[0].sort();
-       sites.append(sortedSites);
-       me.ready.append([true]);
+      me.ready = new qx.data.Array();
+      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/models.csv", function(text)
+      {
+        // text = text.substring(0, text.length - 1);
+        var sortedModels = d3.csv.parseRows(text)[0].sort();
+        me.models.append(sortedModels);
+        me.ready.append([true]);
       })
-
+      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/sites.csv", function(text)
+      {
+        //text = text.substring(0, text.length - 1);
+        var sortedSites = d3.csv.parseRows(text)[0].sort();
+        sites.append(sortedSites);
+        me.ready.append([true]);
+      })
       d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/fields.csv", function(text)
-                      {
-                      //text = text.substring(0, text.length - 1);
-                      var sortedFields = d3.csv.parseRows(text)[0].sort();
-             me.fields.append(sortedFields);
-             me.ready.append([true]);
-            })
-
-
-
+      {
+        //text = text.substring(0, text.length - 1);
+        var sortedFields = d3.csv.parseRows(text)[0].sort();
+        me.fields.append(sortedFields);
+        me.ready.append([true]);
+      })
       var win = new qx.ui.window.Window("Controls");
       win.setMinWidth(200);
       win.setLayout(new qx.ui.layout.VBox());
-
       me.getRoot().add(win,
       {
         left : 900,
         top : 100
       });
-
-
       win.open();
       me.site = new mc.JQx.SelectBox();
-
       var optionsUpperController = new qx.data.controller.List(sites, me.site);
       win.add(me.site);
       me.site.addListener("changeSelection", function(e) {
         me.test();
       }, this);
       me.field = new mc.JQx.SelectBox();
-
-
       var optionsUpperController = new qx.data.controller.List(me.fields, me.field);
       win.add(me.field);
       me.field.addListener("changeSelection", function(e) {
@@ -136,18 +125,18 @@ qx.Class.define("mc.Application",
       }, this);
 
       //              me.field.setSelection([me.field.getSelectables()[0]]);
-setTimeout(function(){
-      me.test();
-},300);
-
+      setTimeout(function() {
+        me.test();
+      }, 300);
     },
     test : function()
     {
       var me = this;
 
-
       // check to make sure all initialization files have been loaded
-      if(me.ready.length!=3){return;}
+      if (me.ready.length != 3) {
+        return;
+      }
 
       // Clear
       d3.select("body").selectAll(".horizon").remove();
@@ -199,16 +188,15 @@ setTimeout(function(){
       context.on("focus", function(i)
       {
         var format = d3.time.format.utc("%HZ %a %b %d");
-
-          if (me.field.getSelection()[0].getLabel() == "PoP") {
-                      var units = "%";
-                  } else if (me.field.getSelection()[0].getLabel() == "SnowAmt") {
-                      units = "\"";
-                    }
+        if (me.field.getSelection()[0].getLabel() == "PoP") {
+          var units = "%";
+        } else if (me.field.getSelection()[0].getLabel() == "SnowAmt") {
+          units = "\"";
+        }
 
         d3.selectAll(".value")[0].forEach(function(d)
         {
-          d.innerHTML = d.innerHTML.substr(1) + units+' - ' + format(new Date(new Date().getTime() + (i * 3600 * 1000 / 5)));  // - diff));
+          d.innerHTML = d.innerHTML.substr(1) + units + ' - ' + format(new Date(new Date().getTime() + (i * 3600 * 1000 / 5)));  // - diff));
         })
         d3.selectAll(".value").style("right", i == null ? null : context.size() - i - 100 + "px");
       });
