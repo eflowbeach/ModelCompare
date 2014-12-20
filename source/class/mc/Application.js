@@ -81,26 +81,20 @@ qx.Class.define("mc.Application",
       me.fields = new qx.data.Array();
       me.models = new qx.data.Array();
       me.ready = new qx.data.Array();
-      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/models.csv", function(text)
+      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/config.csv", function(text)
       {
-        // text = text.substring(0, text.length - 1);
-        var sortedModels = d3.csv.parseRows(text)[0].sort();
-        me.models.append(sortedModels);
+        var sortedSites = d3.csv.parseRows(text)[0];
+        sortedSites.pop();
+        sites.append(sortedSites.sort());
+        var sortedFields = d3.csv.parseRows(text)[1];
+        sortedFields.pop();
+        me.fields.append(sortedFields.sort());
+        var sortedModels = d3.csv.parseRows(text)[2];
+        sortedModels.pop();
+        me.models.append(sortedModels.sort());
+
         me.ready.append([true]);
-      })
-      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/sites.csv", function(text)
-      {
-        //text = text.substring(0, text.length - 1);
-        var sortedSites = d3.csv.parseRows(text)[0].sort();
-        sites.append(sortedSites);
-        me.ready.append([true]);
-      })
-      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/fields.csv", function(text)
-      {
-        //text = text.substring(0, text.length - 1);
-        var sortedFields = d3.csv.parseRows(text)[0].sort();
-        me.fields.append(sortedFields);
-        me.ready.append([true]);
+        me.test();
       })
       var win = new qx.ui.window.Window("Controls");
       win.setMinWidth(200);
@@ -111,30 +105,32 @@ qx.Class.define("mc.Application",
         top : 100
       });
       win.open();
+
+      var siteContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox(10).set({alignY:"middle"}));
       me.site = new mc.JQx.SelectBox();
       var optionsUpperController = new qx.data.controller.List(sites, me.site);
-      win.add(me.site);
+siteContainer.add(new qx.ui.basic.Label("Site:"));
+      siteContainer.add(me.site);
+      win.add(siteContainer);
       me.site.addListener("changeSelection", function(e) {
         me.test();
       }, this);
+       var fieldContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox(10).set({alignY:"middle"}));
       me.field = new mc.JQx.SelectBox();
       var optionsUpperController = new qx.data.controller.List(me.fields, me.field);
-      win.add(me.field);
+fieldContainer.add(new qx.ui.basic.Label("Field:"));
+fieldContainer.add(me.field);
+      win.add(fieldContainer);
       me.field.addListener("changeSelection", function(e) {
         me.test();
       }, this);
-
-      //              me.field.setSelection([me.field.getSelectables()[0]]);
-      setTimeout(function() {
-        me.test();
-      }, 300);
     },
     test : function()
     {
       var me = this;
 
-      // check to make sure all initialization files have been loaded
-      if (me.ready.length != 3) {
+      // check to make sure fields initialized
+      if (me.ready.length != 1) {
         return;
       }
 
@@ -144,7 +140,7 @@ qx.Class.define("mc.Application",
       d3.select("body").selectAll("svg").remove();
 
       // Define the resolution
-      var width = 1202;
+      var width = 1200;
       var height = 50;
 
       // Create the SVG 'canvas'
@@ -153,7 +149,7 @@ qx.Class.define("mc.Application",
       midnightToday.setUTCHours(0, 0, 0, 0);
 
       // get the data
-      var dataset = [midnightToday, new Date().getTime() + 1000 * 3600 * 24 * 11];
+      var dataset = [midnightToday, new Date().getTime() + 1000 * 3600 * 24 * 10.75];
 
       // Define the padding around the graph
       var padding = 50;
@@ -172,17 +168,24 @@ qx.Class.define("mc.Application",
       svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(0," + (height - padding) + ")").call(xAxis);
 
       // HORIZON Charts...
-      var context = cubism.context()  //  .serverDelay( Date.now())
+      var context = cubism.context()
+      .step(3600 * 1000)
+      .size(240 * 5 + 2).stop();
+      var horizon = context.horizon();
 
-      //.serverDelay(new Date(2012, 4, 2) - Date.now())
+var fieldName = me.field.getSelection()[0].getLabel();
+        if (fieldName == "PoP" ||  fieldName == "QPF") {
+          var colors = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#bae4b3", "#74c476", "#31a354", "#006d2c"];
+        } else if (fieldName == "SnowAmt") {
+          colors = ['rgb(239,243,255)','rgb(189,215,231)','rgb(107,174,214)','rgb(33,113,181)','rgb(239,243,255)','rgb(189,215,231)','rgb(107,174,214)','rgb(33,113,181)'];
+        } else if (fieldName == "WindGust") {
+          var colors =   ['rgb(242,240,247)','rgb(203,201,226)','rgb(158,154,200)','rgb(106,81,163)','rgb(242,240,247)','rgb(203,201,226)','rgb(158,154,200)','rgb(106,81,163)'];
+        }
 
-      //.step(864e5)
 
-      //.size(1280)
-      .step(3600 * 1000).size(240 * 5 + 2).stop();
-      var horizon = context.horizon()
+
       d3.select("body").append("div").attr("class", "rule").call(context.rule());
-      d3.select("body").selectAll(".horizon").data(me.models.toArray().map(stock)).enter().insert("div", ".bottom").attr("class", "horizon").call(context.horizon().format(d3.format("+,.2r")));
+      d3.select("body").selectAll(".horizon").data(me.models.toArray().map(stock)).enter().insert("div", ".bottom").attr("class", "horizon").call(context.horizon().colors(colors).format(d3.format("+,.2r")));
 
       //      d3.select("body").selectAll(".horizon").call(horizon.colors(['rgb(241,238,246)','rgb(189,201,225)','rgb(116,169,207)','rgb(5,112,176)','rgb(241,238,246)','rgb(189,201,225)','rgb(116,169,207)','rgb(5,112,176)'])).call(horizon.scale([0,100]));
       context.on("focus", function(i)
@@ -200,7 +203,11 @@ qx.Class.define("mc.Application",
 
         d3.selectAll(".value")[0].forEach(function(d)
         {
-          d.innerHTML = d.innerHTML.substr(1) + units + ' - ' + format(new Date(new Date().getTime() + (i * 3600 * 1000 / 5)));  // - diff));
+        // Fix mouseover time
+        var midnightToday = new Date();
+        midnightToday.setUTCHours(0, 0, 0, 0);
+
+          d.innerHTML = d.innerHTML.substr(1) + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));  // - diff));
         })
         d3.selectAll(".value").style("right", i == null ? null : context.size() - i - 100 + "px");
       });
