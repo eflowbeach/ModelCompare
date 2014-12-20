@@ -192,7 +192,9 @@ qx.Class.define("mc.Application",
           var units = "%";
         } else if (me.field.getSelection()[0].getLabel() == "SnowAmt") {
           units = "\"";
-        }
+        }else if (me.field.getSelection()[0].getLabel() == "WindGust") {
+                   units = "KT";
+                 }
 
         d3.selectAll(".value")[0].forEach(function(d)
         {
@@ -211,7 +213,9 @@ qx.Class.define("mc.Application",
               var maxVal = 100;
             } else if (me.field.getSelection()[0].getLabel() == "SnowAmt") {
               maxVal = 3;
-            }
+            } else if (me.field.getSelection()[0].getLabel() == "WindGust") {
+                            maxVal = 20;
+                          }
 
             var date = new Date(), values = [0, maxVal];  // <-- make a default range
             rows.forEach(function(d) {
