@@ -116,6 +116,7 @@ qx.Class.define("mc.Application",
       me.site.addListener("changeSelection", function(e) {
         me.plotNewData();
       }, this);
+
       var fieldContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox(10).set( {
         alignY : "middle"
       }));
