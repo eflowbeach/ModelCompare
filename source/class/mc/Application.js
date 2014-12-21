@@ -50,37 +50,21 @@ qx.Class.define("mc.Application",
         qx.log.appender.Console;
       }
 
-      /*
-      -------------------------------------------------------------------------
-        Below is your actual application code...
-      -------------------------------------------------------------------------
-      */
-
-      /*
-      -------------------------------------------------------------------------
-        USE AN EXISTING NODE TO ADD WIDGETS INTO THE PAGE LAYOUT FLOW
-      -------------------------------------------------------------------------
-      */
-
-      // Hint: the second and the third parameter control if the dimensions
-
-      // of the element should be respected or not.
+      // Hint: the second and the third parameter control if the dimensions of the element should be respected or not.
       var htmlElement = document.getElementById("isle");
       var inlineIsle = new qx.ui.root.Inline(htmlElement, true, true);
 
       // use VBox layout instead of basic
       inlineIsle.setLayout(new qx.ui.layout.VBox);
 
-      /*
-      -------------------------------------------------------------------------
-        ADD WIDGETS WITH ABSOLUTE POSITIONING
-      -------------------------------------------------------------------------
-      */
+      // Start application
       var me = this;
       var sites = new qx.data.Array();
       me.fields = new qx.data.Array();
       me.models = new qx.data.Array();
       me.ready = new qx.data.Array();
+
+      // Get Config File
       d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/config.csv", function(text)
       {
         var sortedSites = d3.csv.parseRows(text)[0];
@@ -96,6 +80,8 @@ qx.Class.define("mc.Application",
         me.ready.append([true]);
         me.plotNewData();
       })
+
+      // Add Control Window
       var win = new qx.ui.window.Window("Controls");
       win.setMinWidth(200);
       win.setLayout(new qx.ui.layout.VBox());
@@ -105,6 +91,8 @@ qx.Class.define("mc.Application",
         top : 100
       });
       win.open();
+
+      // Sites
       var siteContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox(10).set( {
         alignY : "middle"
       }));
@@ -117,6 +105,7 @@ qx.Class.define("mc.Application",
         me.plotNewData();
       }, this);
 
+      // Fields
       var fieldContainer = new qx.ui.container.Composite(new qx.ui.layout.HBox(10).set( {
         alignY : "middle"
       }));
@@ -142,7 +131,7 @@ qx.Class.define("mc.Application",
         return;
       }
 
-      // Clear
+      // Clear current horizon chart and both scales
       d3.select("body").selectAll(".horizon").remove();
       d3.select("body").selectAll(".rule").remove();
       d3.select("body").selectAll("svg").remove();
@@ -156,14 +145,14 @@ qx.Class.define("mc.Application",
       */
 
       // Create the SVG 'canvas'
-      var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height)
-      var midnightToday = me.runAt;  //new Date();
-      midnightToday.setUTCHours(0, 0, 0, 0);
+      var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height);
 
-      // get the data
+      // Set scale to start at midnight UTC of the runtime
+      var midnightToday = me.runAt;
+      midnightToday.setUTCHours(0, 0, 0, 0);
       var dataset = [midnightToday, midnightToday.getTime() + 1000 * 3600 * 24 * 10.220];
 
-      // Define the padding around the graph
+      // Define the padding around the scale
       var padding = 50;
 
       // Set the scales
@@ -178,8 +167,8 @@ qx.Class.define("mc.Application",
       var format = d3.time.format("%a %d %b");
       var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(format).ticks(d3.time.days, 1);
       svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(0," + (height - padding) + ")").call(xAxis);
-      svg.append("text").attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
-      .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // centre below axis
+      svg.append("text").attr("text-anchor", "middle")  // this makes it easy to center the text as the transform is applied to the anchor
+      .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // center below axis
       .text("Date (UTC)");
 
       /**
@@ -188,6 +177,8 @@ qx.Class.define("mc.Application",
       var context = cubism.context().step(3600 * 1000).size(240 * 5).stop();
       var horizon = context.horizon();
       var fieldName = me.field.getSelection()[0].getLabel();
+
+      // Easily generate ramps with: http://colorbrewer2.org/
       if (fieldName == "PoP" || fieldName == "QPF") {
         var colors = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#bae4b3", "#74c476", "#31a354", "#006d2c"];
       } else if (fieldName == "SnowAmt") {
@@ -197,11 +188,12 @@ qx.Class.define("mc.Application",
       } else if (fieldName == "T")
       {
         colors = ['rgb(178,24,43)', 'rgb(214,96,77)', 'rgb(244,165,130)', 'rgb(253,219,199)', 'rgb(209,229,240)', 'rgb(146,197,222)', 'rgb(67,147,195)', 'rgb(33,102,172)'];
-        colors = colors.reverse();
+        colors = colors.reverse();  // Nice ramp, just reverse it for hot and cold
       }
 
 
 
+      // Add the vertical sampling line
       d3.select("body").append("div").attr("class", "rule").call(context.rule());
       d3.select("body").selectAll(".horizon").data(me.models.toArray().map(stock)).enter().insert("div", ".bottom").attr("class", "horizon").call(context.horizon().colors(colors).format(d3.format("+,.2r")));
       context.on("focus", function(i)
@@ -220,21 +212,24 @@ qx.Class.define("mc.Application",
 
 
 
+        // Spit out the values
         d3.selectAll(".value")[0].forEach(function(d)
         {
           // Fix mouseover time
-          var midnightToday = me.runAt;  //new Date();
+          var midnightToday = me.runAt;
           midnightToday.setUTCHours(0, 0, 0, 0);
-          if (fieldName == "T")
-          {
-            d.innerHTML = d.innerHTML + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));  // - diff));
-          } else
-          {
-            d.innerHTML = d.innerHTML.substr(1) + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));  // - diff));
+          if (fieldName == "T") {
+            d.innerHTML = d.innerHTML + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));
+          } else {
+            d.innerHTML = d.innerHTML.substr(1) + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));
           }
         })
         d3.selectAll(".value").style("right", i == null ? null : context.size() - i - 200 + "px");
       });
+
+      /**
+      Go get the data and then scale plot, then scale data to the horizion plot size 1px per data point
+      */
       function stock(name) {
         return context.metric(function(start, stop, step, callback) {
           d3.csv("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/" + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv", function(rows)
@@ -258,6 +253,13 @@ qx.Class.define("mc.Application",
 
 
             var date = new Date(), values = [0, maxVal];  // <-- make a default range
+
+            /**
+            Replicate data until it fills window width since we have less data values than pixels
+            this was originally meant for real time plotting of high resolution temporal data like CPU processing.
+
+            1200 px / 240 hours = 5 px/hr  (so make 5 copies of a value)
+            */
             rows.forEach(function(d) {
               values.push(d[1], d[1], d[1], d[1], d[1]);
             });
@@ -273,10 +275,6 @@ qx.Class.define("mc.Application",
       // Create the SVG 'canvas'
       var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height)
 
-      //var midnightToday = new Date();
-
-      //midnightToday.setHours(0, 0, 0, 0);
-
       // get the data
       var dataset = [midnightToday, midnightToday.getTime() + 1000 * 3600 * 24 * 9.90];
 
@@ -284,9 +282,8 @@ qx.Class.define("mc.Application",
       var padding = 50;
 
       // Set the scales
-      var minDate = midnightToday;  //new Date(d3.min(dataset));
+      var minDate = midnightToday;
       var maxDate = d3.max(dataset);
-      console.log(minDate, maxDate);
       var xScale = d3.time.scale().domain([minDate, maxDate]).range([0, width]);
       var yScale = d3.scale.linear().domain([0, d3.max(dataset, function(d) {
         return d.value;
@@ -296,8 +293,8 @@ qx.Class.define("mc.Application",
       var format = d3.time.format("%a %d %b");
       var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(format).ticks(d3.time.days, 1);
       svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(0," + (height - padding) + ")").call(xAxis);
-      svg.append("text").attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
-      .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // centre below axis
+      svg.append("text").attr("text-anchor", "middle")  // this makes it easy to center the text as the transform is applied to the anchor
+      .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // center below axis
       .text("Date (Local)");
     }
   }
