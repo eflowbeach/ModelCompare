@@ -1,4 +1,5 @@
 # ModelCompare
+-------------------------
 
 This is a tool to compare NWS forecasts with model data. The data is generated using GFE in AWIPS. The plotting is modeled off of [Cubism's Horizon](https://github.com/square/cubism/wiki/Horizon) plots within a [Qooxdoo](http://qooxdoo.org/) inline application.
 
