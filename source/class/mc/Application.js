@@ -92,6 +92,7 @@ qx.Class.define("mc.Application",
         var sortedModels = d3.csv.parseRows(text)[2];
         sortedModels.pop();
         me.models.append(sortedModels.sort());
+        me.runAt = new Date(d3.csv.parseRows(text)[3] * 1000);
 
         me.ready.append([true]);
         me.test();
@@ -149,7 +150,7 @@ fieldContainer.add(me.field);
       midnightToday.setUTCHours(0, 0, 0, 0);
 
       // get the data
-      var dataset = [midnightToday, new Date().getTime() + 1000 * 3600 * 24 * 10.75];
+      var dataset = [midnightToday, new Date().getTime() + 1000 * 3600 * 24 * 10.220];
 
       // Define the padding around the graph
       var padding = 50;
@@ -167,10 +168,20 @@ fieldContainer.add(me.field);
       var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(format).ticks(d3.time.days, 1);
       svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(0," + (height - padding) + ")").call(xAxis);
 
-      // HORIZON Charts...
+      svg.append("text")
+                  .attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+                  .attr("transform", "translate("+ (width/2) +","+(height-(padding/3) +4)+")")  // centre below axis
+                  .text("Date (UTC)");
+
+
+
+      /*
+      HORIZON Charts...
+      */
       var context = cubism.context()
       .step(3600 * 1000)
-      .size(240 * 5 + 2).stop();
+      .size(240 * 5)
+      .stop();
       var horizon = context.horizon();
 
 var fieldName = me.field.getSelection()[0].getLabel();
@@ -179,7 +190,10 @@ var fieldName = me.field.getSelection()[0].getLabel();
         } else if (fieldName == "SnowAmt") {
           colors = ['rgb(239,243,255)','rgb(189,215,231)','rgb(107,174,214)','rgb(33,113,181)','rgb(239,243,255)','rgb(189,215,231)','rgb(107,174,214)','rgb(33,113,181)'];
         } else if (fieldName == "WindGust") {
-          var colors =   ['rgb(242,240,247)','rgb(203,201,226)','rgb(158,154,200)','rgb(106,81,163)','rgb(242,240,247)','rgb(203,201,226)','rgb(158,154,200)','rgb(106,81,163)'];
+          colors =   ['rgb(242,240,247)','rgb(203,201,226)','rgb(158,154,200)','rgb(106,81,163)','rgb(242,240,247)','rgb(203,201,226)','rgb(158,154,200)','rgb(106,81,163)'];
+        }else if (fieldName == "T"){
+         colors = ['rgb(178,24,43)','rgb(214,96,77)','rgb(244,165,130)','rgb(253,219,199)','rgb(209,229,240)','rgb(146,197,222)','rgb(67,147,195)','rgb(33,102,172)'];
+         colors = colors.reverse();
         }
 
 
@@ -198,18 +212,23 @@ var fieldName = me.field.getSelection()[0].getLabel();
           units = "\"";
         } else if (fieldName == "WindGust") {
           units = "KT";
+        }else if(fieldName == "T"){
+        units = "\xBAF";
         }
 
 
         d3.selectAll(".value")[0].forEach(function(d)
         {
         // Fix mouseover time
-        var midnightToday = new Date();
+        var midnightToday = me.runAt;//new Date();
         midnightToday.setUTCHours(0, 0, 0, 0);
-
+              if(fieldName == "T"){
+          d.innerHTML = d.innerHTML + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));  // - diff));
+                     }else{
           d.innerHTML = d.innerHTML.substr(1) + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));  // - diff));
+          }
         })
-        d3.selectAll(".value").style("right", i == null ? null : context.size() - i - 100 + "px");
+        d3.selectAll(".value").style("right", i == null ? null : context.size() - i -200 + "px");
       });
       function stock(name) {
         return context.metric(function(start, stop, step, callback) {
@@ -227,6 +246,8 @@ var fieldName = me.field.getSelection()[0].getLabel();
               maxVal = 40;
             } else if (fieldName == "QPF") {
               maxVal = 1;
+            }else{
+              maxVal = 10;
             }
 
 
@@ -240,6 +261,36 @@ var fieldName = me.field.getSelection()[0].getLabel();
         }, name);
 
       }
+
+      // Create the SVG 'canvas'
+            var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height)
+            //var midnightToday = new Date();
+            //midnightToday.setHours(0, 0, 0, 0);
+
+            // get the data
+            var dataset = [midnightToday, new Date().getTime() + 1000 * 3600 * 24 * 9.90];
+
+            // Define the padding around the graph
+            var padding = 50;
+
+            // Set the scales
+            var minDate = midnightToday;//new Date(d3.min(dataset));
+            var maxDate = d3.max(dataset);
+            console.log(minDate, maxDate);
+            var xScale = d3.time.scale().domain([minDate, maxDate]).range([0, width]);
+            var yScale = d3.scale.linear().domain([0, d3.max(dataset, function(d) {
+              return d.value;
+            })]).range([height, 0]);
+
+            // x-axis
+            var format = d3.time.format("%a %d %b");
+            var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(format).ticks(d3.time.days, 1);
+            svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(0," + (height - padding) + ")").call(xAxis);
+
+            svg.append("text")
+                        .attr("text-anchor", "middle")  // this makes it easy to centre the text as the transform is applied to the anchor
+                        .attr("transform", "translate("+ (width/2) +","+(height-(padding/3) +4)+")")  // centre below axis
+                        .text("Date (Local)");
     }
   }
 });
