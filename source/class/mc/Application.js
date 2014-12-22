@@ -118,6 +118,13 @@ qx.Class.define("mc.Application",
       me.field.addListener("changeSelection", function(e) {
         me.plotNewData();
       }, this);
+
+      // Realtime Monitor
+      var timer = new qx.event.Timer(1000 * 60 * 5);
+      timer.addListener("interval", function(e) {
+        me.plotNewData();
+      });
+      timer.start();
     },
 
     /**
