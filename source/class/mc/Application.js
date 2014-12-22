@@ -77,6 +77,7 @@ qx.Class.define("mc.Application",
         sortedModels.pop();
         me.models.append(sortedModels.sort());
         me.runAt = new Date(d3.csv.parseRows(text)[3] * 1000);
+        me.runAtClone = new Date(d3.csv.parseRows(text)[3] * 1000);
         me.ready.append([true]);
         me.plotNewData();
       })
@@ -171,6 +172,18 @@ qx.Class.define("mc.Application",
       .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // center below axis
       .text("Date (UTC)");
 
+      // Add age of data to graph
+      var age = (new Date().getTime() - me.runAtClone.getTime()) / 1000;
+      var hhmm = me.splitTime(age);
+      if (age < 3600 * 3) {
+        var ageColor = "#07a842";
+      } else {
+        ageColor = "#FF0000";
+      }
+      svg.append("text").attr("text-anchor", "left")  // this makes it easy to center the text as the transform is applied to the anchor
+      .attr("transform", "translate(0," + (height - (padding / 3) + 8) + ")")  // center below axis
+      .attr("fill", ageColor).attr("font-weight", "bold").text("Last ran: " + hhmm + " ago");
+
       /**
       HORIZON Charts...
       */
@@ -241,13 +254,13 @@ qx.Class.define("mc.Application",
             if (fieldName == "PoP") {
               var maxVal = 100;
             } else if (fieldName == "SnowAmt") {
-              maxVal = 3;
+              maxVal = 6;
             } else if (fieldName == "WindGust") {
               maxVal = 40;
             } else if (fieldName == "QPF") {
               maxVal = 1;
             } else {
-              maxVal = 10;
+              maxVal = 25;
             }
 
 
@@ -276,7 +289,7 @@ qx.Class.define("mc.Application",
       var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height)
 
       // get the data
-      var dataset = [midnightToday, midnightToday.getTime() + 1000 * 3600 * 24 * 10.05];//9.90];
+      var dataset = [midnightToday, midnightToday.getTime() + 1000 * 3600 * 24 * 10.05];  //9.90];
 
       // Define the padding around the graph
       var padding = 50;
@@ -296,6 +309,24 @@ qx.Class.define("mc.Application",
       svg.append("text").attr("text-anchor", "middle")  // this makes it easy to center the text as the transform is applied to the anchor
       .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // center below axis
       .text("Date (Local)");
+    },
+    splitTime : function(a)
+    {
+      var hours = Math.floor(a / 3600);
+      var minutes = Math.floor(a / 60) - (hours * 60);
+
+      //var seconds=a-(hours*3600)-(minutes*60);
+      var hs = ' hour';
+      var ms = ' minute';  //var ss=' second';
+      if (hours != 1) {
+        hs += 's'
+      }
+      if (minutes != 1) {
+        ms += 's'
+      }
+
+      //if (seconds!=1) {ss+='s'}
+      return hours + hs + ', ' + minutes + ms;  //+', '+seconds+ss
     }
   }
 });
