@@ -158,7 +158,7 @@ qx.Class.define("mc.Application",
       // Set the scales
       var minDate = new Date(d3.min(dataset));
       var maxDate = d3.max(dataset);
-      var xScale = d3.time.scale.utc().domain([minDate, maxDate]).range([-20, width]);
+      var xScale = d3.time.scale.utc().domain([minDate, maxDate]).range([-24, width]);
       var yScale = d3.scale.linear().domain([0, d3.max(dataset, function(d) {
         return d.value;
       })]).range([height, 0]);
@@ -276,7 +276,7 @@ qx.Class.define("mc.Application",
       var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height)
 
       // get the data
-      var dataset = [midnightToday, midnightToday.getTime() + 1000 * 3600 * 24 * 9.90];
+      var dataset = [midnightToday, midnightToday.getTime() + 1000 * 3600 * 24 * 10.05];//9.90];
 
       // Define the padding around the graph
       var padding = 50;
@@ -284,7 +284,7 @@ qx.Class.define("mc.Application",
       // Set the scales
       var minDate = midnightToday;
       var maxDate = d3.max(dataset);
-      var xScale = d3.time.scale().domain([minDate, maxDate]).range([0, width]);
+      var xScale = d3.time.scale().domain([minDate, maxDate]).range([-4, width]);
       var yScale = d3.scale.linear().domain([0, d3.max(dataset, function(d) {
         return d.value;
       })]).range([height, 0]);
