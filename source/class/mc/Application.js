@@ -64,8 +64,8 @@ qx.Class.define("mc.Application",
       me.models = new qx.data.Array();
       me.ready = new qx.data.Array();
 
-      // Get Config File
-      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/config.csv", function(text)
+      // Get Config File - random # to avoid caching
+      d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/config.csv" + '?' + Math.floor(Math.random() * 1000), function(text)
       {
         var sortedSites = d3.csv.parseRows(text)[0];
         sortedSites.pop();
@@ -252,7 +252,8 @@ qx.Class.define("mc.Application",
       */
       function stock(name) {
         return context.metric(function(start, stop, step, callback) {
-          d3.csv("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/" + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv", function(rows)
+          //  Add random # to avoid caching
+          d3.csv("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/" + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv" + '?' + Math.floor(Math.random() * 1000), function(rows)
           {
             rows = rows.map(function(d) {
               return [new Date(d.Date * 1000), d.Value];
