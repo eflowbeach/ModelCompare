@@ -145,9 +145,9 @@ qx.Class.define("mc.Application",
       }
 
       // Clear current horizon chart and both scales
-      d3.select("body").selectAll(".horizon").remove();
-      d3.select("body").selectAll(".rule").remove();
-      d3.select("body").selectAll("svg").remove();
+      d3.select("#demo").selectAll(".horizon").remove();
+      d3.select("#demo").selectAll(".rule").remove();
+      d3.select("#demo").selectAll("svg").remove();
 
       // Define the resolution
       var width = 1200;
@@ -158,7 +158,7 @@ qx.Class.define("mc.Application",
       */
 
       // Create the SVG 'canvas'
-      var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height);
+      var svg = d3.select("#demo").append("svg").attr("viewBox", "0 0 " + width + " " + height);
 
       // Set scale to start at midnight UTC of the runtime
       var midnightToday = me.runAt;
@@ -225,8 +225,8 @@ qx.Class.define("mc.Application",
 
 
       // Add the vertical sampling line
-      d3.select("body").append("div").attr("class", "rule").call(context.rule());
-      d3.select("body").selectAll(".horizon").data(me.models.toArray().map(stock)).enter().insert("div", ".bottom").attr("class", "horizon").call(context.horizon().colors(colors).format(d3.format("+,.2r")));
+      d3.select("#demo").append("div").attr("class", "rule").call(context.rule());
+      d3.select("#demo").selectAll(".horizon").data(me.models.toArray().map(stock)).enter().insert("div", ".bottom").attr("class", "horizon").call(context.horizon().colors(colors).format(d3.format("+,.2r")));
       context.on("focus", function(i)
       {
         var format = d3.time.format.utc("%HZ %a %b %d");
@@ -305,7 +305,7 @@ qx.Class.define("mc.Application",
       */
 
       // Create the SVG 'canvas'
-      var svg = d3.select("body").append("svg").attr("viewBox", "0 0 " + width + " " + height)
+      var svg = d3.select("#demo").append("svg").attr("viewBox", "0 0 " + width + " " + height)
 
       // get the data
       var dataset = [midnightToday, midnightToday.getTime() + 1000 * 3600 * 24 * 10.05];  //9.90];
