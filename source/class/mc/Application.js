@@ -121,7 +121,12 @@ qx.Class.define("mc.Application",
 
       // Realtime Monitor
       var timer = new qx.event.Timer(1000 * 60 * 5);
-      timer.addListener("interval", function(e) {
+      timer.addListener("interval", function(e)
+      {
+        // Get the last update time only.  Assuming nothing else changes (fields, models etc)...
+        d3.text("http://dev.nids.noaa.gov/~jwolfe/ModelCompare/data/config.csv" + '?' + Math.floor(Math.random() * 1000), function(text) {
+          me.runAtClone = new Date(d3.csv.parseRows(text)[3] * 1000);
+        })
         me.plotNewData();
       });
       timer.start();
@@ -175,6 +180,12 @@ qx.Class.define("mc.Application",
       var format = d3.time.format("%a %d %b");
       var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(format).ticks(d3.time.days, 1);
       svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(0," + (height - padding) + ")").call(xAxis);
+
+      // Hack for a minor-axis
+      var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat("").ticks(d3.time.days, 1);
+      svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(60,0)").call(xAxis);
+
+      // Axis Label
       svg.append("text").attr("text-anchor", "middle")  // this makes it easy to center the text as the transform is applied to the anchor
       .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // center below axis
       .text("Date (UTC)");
@@ -314,6 +325,12 @@ qx.Class.define("mc.Application",
       var format = d3.time.format("%a %d %b");
       var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat(format).ticks(d3.time.days, 1);
       svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(0," + (height - padding) + ")").call(xAxis);
+
+// Hack for a minor-axis
+      var xAxis = d3.svg.axis().scale(xScale).orient("bottom").tickFormat("").ticks(d3.time.days, 1);
+      svg.append("g").attr("class", "axis x-axis").attr("transform", "translate(60,0)").call(xAxis);
+
+      // Axis Label
       svg.append("text").attr("text-anchor", "middle")  // this makes it easy to center the text as the transform is applied to the anchor
       .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // center below axis
       .text("Date (Local)");
