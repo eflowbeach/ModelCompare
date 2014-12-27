@@ -214,12 +214,14 @@ qx.Class.define("mc.Application",
         var colors = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#bae4b3", "#74c476", "#31a354", "#006d2c"];
       } else if (fieldName == "SnowAmt") {
         colors = ['rgb(239,243,255)', 'rgb(189,215,231)', 'rgb(107,174,214)', 'rgb(33,113,181)', '#c6dbef', '#6baed6', '#2171b5', '#08306b'];
-      } else if (fieldName == "WindGust") {
+      } else if (fieldName == "Wind" || fieldName == "WindGust" ) {
         colors = ['rgb(242,240,247)', 'rgb(203,201,226)', 'rgb(158,154,200)', 'rgb(106,81,163)', 'rgb(242,240,247)', 'rgb(203,201,226)', 'rgb(158,154,200)', 'rgb(106,81,163)'];
       } else if (fieldName == "T")
       {
         colors = ['rgb(178,24,43)', 'rgb(214,96,77)', 'rgb(244,165,130)', 'rgb(253,219,199)', 'rgb(209,229,240)', 'rgb(146,197,222)', 'rgb(67,147,195)', 'rgb(33,102,172)'];
         colors = colors.reverse();  // Nice ramp, just reverse it for hot and cold
+      }else{
+        colors = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#bae4b3", "#74c476", "#31a354", "#006d2c"];
       }
 
 
@@ -232,14 +234,16 @@ qx.Class.define("mc.Application",
         var format = d3.time.format.utc("%HZ %a %b %d");
         var fieldName = me.field.getSelection()[0].getLabel();
         if (fieldName == "PoP") {
-          var units = "%";
+          var units = " %";
         } else if (fieldName == "SnowAmt" || fieldName == "QPF") {
-          units = "\"";
-        } else if (fieldName == "WindGust") {
-          units = "KT";
+          units = " \"";
+        } else if (fieldName == "Wind" || fieldName == "WindGust") {
+          units = " KT";
         } else if (fieldName == "T") {
           units = "\xBAF";
-        }
+        }else   {
+                   units = "";
+                 }
 
 
 
@@ -274,8 +278,8 @@ qx.Class.define("mc.Application",
               var maxVal = 100;
             } else if (fieldName == "SnowAmt") {
               maxVal = 6;
-            } else if (fieldName == "WindGust") {
-              maxVal = 40;
+            } else if (fieldName == "Wind" || fieldName == "WindGust") {
+              maxVal = 30;
             } else if (fieldName == "QPF") {
               maxVal = 1;
             } else {
