@@ -74,10 +74,10 @@ qx.Class.define("mc.Application",
       }, this);
 
       // A check to see if a wfo was provided
-      if(wfo==""){
-         d3.select("#demo").html("<font style='color:red; font-weight:900;'>You need to provide a 3-letter wfo id like this:</font><br><a href=\"http://dev.nids.noaa.gov/~jwolfe/ModelCompare/?wfo=rlx\">http://dev.nids.noaa.gov/~jwolfe/ModelCompare/?wfo=rlx</a>");
-      }else{
-      req.send();
+      if (wfo == "") {
+        d3.select("#demo").html("<font style='color:red; font-weight:900;'>You need to provide a 3-letter wfo id like this:</font><br><a href=\"http://dev.nids.noaa.gov/~jwolfe/ModelCompare/?wfo=rlx\">http://dev.nids.noaa.gov/~jwolfe/ModelCompare/?wfo=rlx</a>");
+      } else {
+        req.send();
       }
 
       // Get Config File - random # to avoid caching
@@ -157,8 +157,9 @@ qx.Class.define("mc.Application",
     plotNewData : function()
     {
       var me = this;
+      me.values = {
 
-      me.values = {};
+      };
 
       // check to make sure fields initialized
       if (me.ready.length != 1) {
@@ -237,14 +238,14 @@ qx.Class.define("mc.Application",
         colors = ['rgb(239,243,255)', 'rgb(189,215,231)', 'rgb(107,174,214)', 'rgb(33,113,181)', '#c6dbef', '#6baed6', '#2171b5', '#08306b'];
       } else if (fieldName == "Wind" || fieldName == "WindGust") {
         colors = ['rgb(242,240,247)', 'rgb(203,201,226)', 'rgb(158,154,200)', 'rgb(106,81,163)', 'rgb(242,240,247)', 'rgb(203,201,226)', 'rgb(158,154,200)', 'rgb(106,81,163)'];
-      } else if (fieldName == "T")
-      {
-        colors = ['rgb(178,24,43)', 'rgb(214,96,77)', 'rgb(244,165,130)', 'rgb(253,219,199)', 'rgb(209,229,240)', 'rgb(146,197,222)', 'rgb(67,147,195)', 'rgb(33,102,172)'];
-        colors = colors.reverse();  // Nice ramp, just reverse it for hot and cold
-      } else
-      {
+      } else if (fieldName == "T") {
+        // Nice ramp, just reverse it for hot and cold
+        colors = ["rgb(33,102,172)", "rgb(67,147,195)", "rgb(146,197,222)", "rgb(209,229,240)", "rgb(253,219,199)", "rgb(244,165,130)", "rgb(214,96,77)", "rgb(178,24,43)"];
+      } else {
         colors = ["#08519c", "#3182bd", "#6baed6", "#bdd7e7", "#bae4b3", "#74c476", "#31a354", "#006d2c"];
       }
+
+
 
       // Add the vertical sampling line
       d3.select("#demo").append("div").attr("class", "rule").call(context.rule());
@@ -265,48 +266,49 @@ qx.Class.define("mc.Application",
           units = "";
         }
 
-        var model=0;
+
+
+        var model = 0;
+
         // Spit out the values
         d3.selectAll(".value")[0].forEach(function(d)
         {
-
           // Fix mouseover time
           var midnightToday = me.runAt;
           midnightToday.setUTCHours(0, 0, 0, 0);
-          if (fieldName == "T") {
-
-          console.log(me.values,me.models.toArray()[model]);
-            d.innerHTML = d.innerHTML + units + ' ('+me.values[me.models.toArray()[model]][i]+ ') - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));
-          } else {
+          if (fieldName == "T")
+          {
+            try{
+            var tval = me.values[me.models.toArray()[model]][i];
+            }catch(e){
+            tval = '';
+            }
+            d.innerHTML = d.innerHTML + units + ' (' + (isNaN(tval) ? '' : tval) + units + ') - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));
+          } else
+          {
             d.innerHTML = d.innerHTML.substr(1) + units + ' - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));
           }
           model++;
         })
-        d3.selectAll(".value").style("right", i == null ? null : context.size() - i - 200 + "px");
-
+        if (fieldName == "T") {
+          d3.selectAll(".value").style("right", i == null ? null : context.size() - i - 250 + "px");
+        } else {
+          d3.selectAll(".value").style("right", i == null ? null : context.size() - i - 200 + "px");
+        }
       });
-
 
       /**
       Go get the data and then scale plot, then scale data to the horizon plot size 1px per data point
       */
       function stock(name) {
         return context.metric(function(start, stop, step, callback) {
-
-           // Add random # to avoid caching
+          // Add random # to avoid caching
           d3.csv(me.dataLocation + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv" + '?' + Math.floor(Math.random() * 1000), function(rows)
           {
-
-           if(fieldName=="T"){
-            rows = rows.map(function(d) {
-                          return [new Date(d.Date * 1000), d.Value];
-                        });
-           }else{
-            rows = rows.map(function(d) {
-              return [new Date(d.Date * 1000), d.Value];
-            });
-            }
             var fieldName = me.field.getSelection()[0].getLabel();
+            rows = rows.map(function(d) {
+              return [new Date(d.Date * 1000), d.Value, parseInt(d.Value2)];
+            });
             if (fieldName == "PoP") {
               var maxVal = 100;
             } else if (fieldName == "SnowAmt") {
@@ -319,6 +321,8 @@ qx.Class.define("mc.Application",
               maxVal = 25;
             }
 
+
+
             var date = new Date(), values = [0, maxVal];  // <-- make a default range
 
             /**
@@ -328,19 +332,17 @@ qx.Class.define("mc.Application",
             1200 px / 240 hours = 5 px/hr  (so make 5 copies of a value)
             */
             tvalues = [];
-            rows.forEach(function(d) {
+            rows.forEach(function(d)
+            {
               values.push(d[1], d[1], d[1], d[1], d[1]);
-              if(fieldName=="T"){
-                   tvalues.push(d[2],d[2],d[2],d[2],d[2])
+              if (fieldName == "T") {
+                tvalues.push(d[2], d[2], d[2], d[2], d[2])
               }
             });
-            console.log(tvalues)
             me.values[name] = tvalues;
             callback(null, values);
           });
         }, name);
-
-
       }
 
       /**
@@ -378,6 +380,10 @@ qx.Class.define("mc.Application",
       .attr("transform", "translate(" + (width / 2) + "," + (height - (padding / 3) + 4) + ")")  // center below axis
       .text("Date (Local)");
     },
+
+    /**
+    Split seconds into hhmm
+    */
     splitTime : function(a)
     {
       var hours = Math.floor(a / 3600);
