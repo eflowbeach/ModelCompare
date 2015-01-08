@@ -5,10 +5,7 @@
   <title>Model Compare</title>
   <script type="text/javascript" src="script/mc.js"></script>
 
-
-
   <style type="text/css">
-
 
     #isle {
       width: 100%;
@@ -124,16 +121,10 @@
       z-index: 2;
       }
 
-
-
-
-
       path {
       fill: none;
       stroke: black;
       }
-
-
 
       svg .data-point {
       stroke: blue;
@@ -163,9 +154,22 @@
 
 </head>
 <body>
+
       <div id="isle"></div>
       <div id="demo"></div>
 </body>
+
+ <!-- Get WFO -->
+      <script type="text/javascript">
+                        <?php
+
+                          $wfo = $_REQUEST['wfo'];
+                        	echo "var wfo = \"$wfo\";";
+                        	?>
+      </script>
+
+
+
 <!--D3 code here so DOM elements are valid-->
 <script src="resource/mc/d3.v3.min.js" charset="utf-8"></script>
 <script src="resource/mc/cubism.v1.min.js"></script>
