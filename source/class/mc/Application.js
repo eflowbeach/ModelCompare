@@ -1,15 +1,6 @@
 /* ************************************************************************
 
-   Copyright:
-
-   License:
-
    Authors:   Jonathan Wolfe - based off of Mike Bostocks' horizon charts
-
-************************************************************************ */
-
-/* ************************************************************************
-
 
 ************************************************************************ */
 
@@ -63,7 +54,9 @@ qx.Class.define("mc.Application",
       me.fields = new qx.data.Array();
       me.models = new qx.data.Array();
       me.ready = new qx.data.Array();
-      var req = new qx.io.request.Xhr("resource/mc/getConfig.php?wfo=" + wfo);
+
+      // Get the config file...
+      var req = new qx.io.request.Xhr("resource/mc/getConfig.php?wfo=" + wfo.toLowerCase());
       req.setParser("json");
       req.setCache(true);
       req.setAsync(false);
@@ -81,8 +74,24 @@ qx.Class.define("mc.Application",
       }
 
       // Get Config File - random # to avoid caching
-      d3.text(me.weblocation + "/config.csv" + '?' + Math.floor(Math.random() * 1000), function(text)
+      me.configReq = new qx.io.request.Xhr();
+
+      // Set URL (mandatory)
+      me.configReq.setUrl("resource/mc/getConfigDetails.php");
+
+      // Set method
+      me.configReq.setMethod("POST");
+
+      //req.setParser("json");
+
+      // Set request data. Accepts String, Map or qooxdoo Object.
+      me.configReq.setRequestData( {
+        "details" : me.weblocation + "config.csv"
+      });
+      me.configReq.setCache(false);
+      me.configReq.addListener("success", function(e)
       {
+        var text = e.getTarget().getResponse();
         var sortedSites = d3.csv.parseRows(text)[0];
         sortedSites.pop();
         sites.append(sortedSites.sort());
@@ -99,7 +108,8 @@ qx.Class.define("mc.Application",
         me.dataLocation = d3.csv.parseRows(text)[4];
         me.ready.append([true]);
         me.plotNewData();
-      })
+      });
+      me.configReq.send();
 
       // Add Control Window
       var win = new qx.ui.window.Window("Controls");
@@ -142,11 +152,7 @@ qx.Class.define("mc.Application",
       var timer = new qx.event.Timer(1000 * 60 * 5);
       timer.addListener("interval", function(e)
       {
-        // Get the last update time only.  Assuming nothing else changes (fields, models etc)...
-        d3.text(me.weblocation + "/config.csv" + '?' + Math.floor(Math.random() * 1000), function(text) {
-          me.runAtClone = new Date(d3.csv.parseRows(text)[3] * 1000);
-        })
-        me.plotNewData();
+        me.configReq.send();
       });
       timer.start();
     },
@@ -254,7 +260,7 @@ qx.Class.define("mc.Application",
       {
         var format = d3.time.format.utc("%HZ %a %b %d");
         var fieldName = me.field.getSelection()[0].getLabel();
-        if (fieldName == "PoP") {
+        if (fieldName == "PoP" || fieldName == "RH") {
           var units = " %";
         } else if (fieldName == "SnowAmt" || fieldName == "QPF") {
           units = " \"";
@@ -278,10 +284,10 @@ qx.Class.define("mc.Application",
           midnightToday.setUTCHours(0, 0, 0, 0);
           if (fieldName == "T")
           {
-            try{
-            var tval = me.values[me.models.toArray()[model]][i];
-            }catch(e){
-            tval = '';
+            try {
+              var tval = me.values[me.models.toArray()[model]][i];
+            }catch (e) {
+              tval = '';
             }
             d.innerHTML = d.innerHTML + units + ' (' + (isNaN(tval) ? '' : tval) + units + ') - ' + format(new Date(midnightToday.getTime() + (i * 3600 * 1000 / 5)));
           } else
@@ -301,10 +307,31 @@ qx.Class.define("mc.Application",
       Go get the data and then scale plot, then scale data to the horizon plot size 1px per data point
       */
       function stock(name) {
-        return context.metric(function(start, stop, step, callback) {
+        return context.metric(function(start, stop, step, callback)
+        {
           // Add random # to avoid caching
-          d3.csv(me.dataLocation + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv" + '?' + Math.floor(Math.random() * 1000), function(rows)
+
+          //          d3.csv(me.dataLocation + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv" + '?' + Math.floor(Math.random() * 1000), function(rows)
+
+          //          {
+          var req = new qx.io.request.Xhr();
+
+          // Set URL (mandatory)
+          req.setUrl("resource/mc/getData.php");
+
+          // Set method
+          req.setMethod("POST");
+
+          //req.setParser("json");
+
+          // Set request data. Accepts String, Map or qooxdoo Object.
+          req.setRequestData( {
+            "data" : me.dataLocation + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv" + '?' + Math.floor(Math.random() * 1000)
+          });
+
+          req.addListener("success", function(e)
           {
+            var rows = d3.csv.parse(e.getTarget().getResponse());
             var fieldName = me.field.getSelection()[0].getLabel();
             rows = rows.map(function(d) {
               return [new Date(d.Date * 1000), d.Value, parseInt(d.Value2)];
@@ -341,7 +368,8 @@ qx.Class.define("mc.Application",
             });
             me.values[name] = tvalues;
             callback(null, values);
-          });
+          }, this);
+          req.send();
         }, name);
       }
 
