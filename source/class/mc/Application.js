@@ -149,10 +149,24 @@ qx.Class.define("mc.Application",
       }, this);
 
       // Realtime Monitor
-      var timer = new qx.event.Timer(1000 * 60 * 5);
-      timer.addListener("interval", function(e)
+
+      // Get Config File - this updates the time FIXME need to bind selectboxes to this to prevent duplicates
+      me.updateReq = new qx.io.request.Xhr();
+      me.updateReq.setUrl("resource/mc/getConfigDetails.php");
+      me.updateReq.setMethod("POST");
+      me.updateReq.setRequestData( {
+        "details" : me.weblocation + "config.csv"
+      });
+      me.updateReq.setCache(false);
+      me.updateReq.addListener("success", function(e)
       {
-        me.configReq.send();
+        var text = e.getTarget().getResponse();
+        me.runAtClone = new Date(d3.csv.parseRows(text)[3] * 1000);
+        me.plotNewData();
+      });
+      var timer = new qx.event.Timer(1000 * 60 * 3 );
+      timer.addListener("interval", function(e) {
+        me.updateReq.send();
       });
       timer.start();
     },
@@ -328,7 +342,6 @@ qx.Class.define("mc.Application",
           req.setRequestData( {
             "data" : me.dataLocation + me.field.getSelection()[0].getLabel() + "_" + name + "_" + me.site.getSelection()[0].getLabel() + ".csv" + '?' + Math.floor(Math.random() * 1000)
           });
-
           req.addListener("success", function(e)
           {
             var rows = d3.csv.parse(e.getTarget().getResponse());
