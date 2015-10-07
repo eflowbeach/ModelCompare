@@ -4,6 +4,8 @@ include_once("./util/sanitize.php");
 // jSON URL which should be requested
 $details = isset($_REQUEST["details"]) ? $_REQUEST["details"] : 0;
 
+$userAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/43.0.2357.134 Safari/537.36';
+
 
 $json_url = $details;//"http://www.weather.gov/source/".$wfo."/modelcompare/config.json";
 
@@ -12,6 +14,7 @@ $ch = curl_init( $json_url );
 
 // Configuring curl options
 $options = array(
+        CURLOPT_USERAGENT=> $userAgent,
 		CURLOPT_RETURNTRANSFER => true//,
 		//CURLOPT_HTTPHEADER => array('Content-type: application/json')
 );
